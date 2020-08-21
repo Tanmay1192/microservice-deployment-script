@@ -2,10 +2,12 @@
 FROM node:alpine as builder
 WORKDIR /app
 COPY ../../probo-dashboard/package.json .
-COPY yarn.lock .
-RUN yarn
-COPY . .
-RUN yarn build
+COPY ../../probo-dashboard/package-lock.json .
+RUN npm install --silent
+RUN npm install react-scripts@3.4.1 -g --silent
+COPY ../../probo-dashboard/ .
+RUN npm run build
+
 
 # => Run container
 FROM nginx:1.15.2-alpine
@@ -23,7 +25,7 @@ EXPOSE 80
 
 # Initialize environment variables into filesystem
 WORKDIR /usr/share/nginx/html
-COPY ../assets/setenv.sh .
+COPY ../script/setenv.sh .
 COPY ../assets/.env .
 
 # Add bash
@@ -34,4 +36,4 @@ RUN chmod +x env.sh
 # RUN ./env.sh
 
 # Start Nginx server
-CMD ["/bin/bash", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]
+CMD ["/bin/bash", "-c", "/usr/share/nginx/html/setenv.sh && nginx -g \"daemon off;\""]
